@@ -1,0 +1,4 @@
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/enumitem/enumitem.sty
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/enumitem/enumitem.sty
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/enumitem/enumitem.sty
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/enumitem/enumitem.sty

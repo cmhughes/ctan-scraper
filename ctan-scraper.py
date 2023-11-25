@@ -1,16 +1,34 @@
+#!/usr/bin/python3
 #
-# reference: 
-#   https://anorien.csc.warwick.ac.uk/mirrors/CTAN/
-#   https://www.geeksforgeeks.org/beautifulsoup-error-handling/
+# ctan-scraper.py
+#
+#   a script to web scrape ctan for a user specified pattern
 # 
-# test cases
-#   python3 ctan-new.py --path "macros/latex/contrib/abnt/"  ".*?\.cls"
-#   python3 ctan-new.py --path "macros/latex/contrib/siunitx" --verbose ".*?\.cls"
-#   python3 ctan-new.py --path "macros/latex/contrib/siunitx"  ".*?\..*?"
-#   python3 ctan-new.py --path "macros/latex/contrib/aeb"  ".*?\.(pdf|tex)"
-#   python3 ctan-new.py --path "macros/latex/contrib/enumitem"  "enumitem.sty"
-#   python3 ctan-new.py --path "macros/latex/contrib/ab"  ".*\.sty"
-
+# example
+# 
+#       ctan-scraper.py --path "macros/latex/contrib/abnt/" --output myfile1.txt ".*?\.cls"
+# 
+# gives all of the `.cls` files in the directory `<mirror>/macros/latex/contrib/abnt/`, and
+# you receive
+# 
+#       INFO - [re.compile('macros'), re.compile('latex'), re.compile('contrib'), re.compile('abnt')]
+#       INFO - mirror: https://anorien.csc.warwick.ac.uk/mirrors/CTAN/
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntex2/tex/abntex2.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntexto/abntexto.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntex2/tex/abntex2.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntexto/abntexto.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntex2/tex/abntex2.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntexto/abntexto.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntex2/tex/abntex2.cls
+#       INFO - https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntexto/abntexto.cls
+#       INFO - match count: 8
+#       INFO - directories searched count: 300
+#       INFO - directories ignored count: 20102
+#       INFO - output written to myfile1.txt
+#       INFO - time: 59.2872476309999
+# 
+# and the output is written to `myfile1.txt`.
+#
 from urllib.request import Request, urlopen, urlretrieve
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup
@@ -22,12 +40,23 @@ import argparse, re, logging, timeit
 parser = argparse.ArgumentParser(description='ctan web scraper')
 
 # choices=['biblio','digests','dviware','fonts','graphics','help','indexing','info','install','macros','obsolete','support','systems','tds','usergrps','web'],
+
+parser.add_argument('--logging', 
+                    type=str.lower, 
+                    choices=['debug','info','warning','error','critical','quiet','verbose'],
+                    help='logging choice')
+
+parser.add_argument('--mirror', 
+                    type=str, 
+                    help='ctan mirror')
+
+parser.add_argument('--output', 
+                    type=str, 
+                    help='output file')
+
 parser.add_argument('--path', 
                     type=str, 
                     help='path pattern, can be regex')
-
-parser.add_argument('--verbose', action='store_true',
-                    help='verbose mode')
 
 parser.add_argument('pattern', 
                     type=str, 
@@ -76,8 +105,19 @@ log = logging.getLogger('logger')
 log.setLevel(logging.DEBUG)
 
 ch = logging.StreamHandler()
-if args.verbose: 
-   ch.setLevel(logging.DEBUG)
+if args.logging: 
+   if args.logging == 'info':
+      ch.setLevel(logging.INFO)
+   elif (args.logging == 'debug' or args.logging == 'verbose'):
+      ch.setLevel(logging.DEBUG)
+   elif args.logging == 'warning':
+      ch.setLevel(logging.WARNING)
+   elif args.logging == 'error':
+      ch.setLevel(logging.ERROR)
+   elif (args.logging == 'critical' or args.logging == 'quiet'):
+      ch.setLevel(logging.CRITICAL)
+   else:
+      ch.setLevel(logging.INFO)
 else:
    ch.setLevel(logging.INFO)
 
@@ -97,11 +137,12 @@ if args.path:
    path_patterns[:] = [re.compile(rf"{x}") for x in path_patterns]
    log.info(path_patterns)
 
-prog = re.compile(rf"^{args.pattern}$")
+ctan_pattern = re.compile(rf"^{args.pattern}$")
 
 ignore_count = 0
 accept_count = 0
-match_count = 0
+
+match_storage = []
 
 # read url routine
 #   reference: https://stackoverflow.com/a/40661485
@@ -109,8 +150,8 @@ match_count = 0
 def read_url(url,pattern,level):
     global ignore_count
     global accept_count
-    global match_count 
 
+    # https://www.geeksforgeeks.org/beautifulsoup-error-handling/
     url = url.replace(" ","%20")
     req = Request(url)
 
@@ -156,16 +197,37 @@ def read_url(url,pattern,level):
         except IndexError:
            continue
 
-        if prog.match(file_name):
+        if ctan_pattern.match(file_name):
            log.info(url_new)
-           match_count += 1
+           match_storage.append(url_new)
 
-ctan_mirror = "https://anorien.csc.warwick.ac.uk/mirrors/CTAN/"
+#
+# possibly read in user-specified mirror
+#
+if args.mirror: 
+   ctan_mirror = args.mirror
+else:
+   ctan_mirror = "https://anorien.csc.warwick.ac.uk/mirrors/CTAN/"
 log.info('mirror: '+ctan_mirror)
+
+#
+# the main routine
+#
 t0 = timeit.default_timer()
 read_url(ctan_mirror,args.pattern,0)
 t1 = timeit.default_timer()
-log.info(f'match count: {match_count}')
+log.info(f'match count: {len(match_storage)}')
 log.info(f'directories searched count: {accept_count}')
 log.info(f'directories ignored count: {ignore_count}')
+
+# 
+# output to file
+#
+if args.output: 
+  ctan_scrape_file = open(args.output, "w")
+  for indv_match in match_storage:
+      ctan_scrape_file.write(indv_match+"\n")
+  ctan_scrape_file.close()
+  log.info(f'output written to {args.output}')
+
 log.info(f'time: {t1-t0}')

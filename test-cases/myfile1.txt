@@ -1,0 +1,8 @@
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntex2/tex/abntex2.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntexto/abntexto.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntex2/tex/abntex2.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntexto/abntexto.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntex2/tex/abntex2.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex/contrib/abntexto/abntexto.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntex2/tex/abntex2.cls
+https://anorien.csc.warwick.ac.uk/mirrors/CTAN/macros/latex2e/contrib/abntexto/abntexto.cls
